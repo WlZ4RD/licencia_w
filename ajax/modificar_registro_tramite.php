@@ -1,0 +1,74 @@
+<?php
+  session_start();
+  if (!isset($_SESSION['login_estado']) AND $_SESSION['login_estado'] != 1) {
+    header("location: login.php");
+    exit;
+  }
+
+  if(empty($_POST['actividadEconomica0'])){
+    $errors[]="Ingrese Actividad Economica";
+  }else if(empty($_POST['fFin0'])){
+    $errors[]="Fecha de vigencia Vacia";
+  }else {
+    require_once("../servidor.php");
+    $conn =null;
+    try {
+      $conn =new PDO($dir_server, $username, $password);
+      
+      $conn->beginTransaction();
+
+      $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+      
+      $par_modif= array($_POST['actividadEconomica0'], $_POST['fInicio0'], $_POST['fFin0'], $_POST['direccion0'], $_POST['zonificacion0'], $_POST['telefono0'], $_POST['nBoleta0'], $_POST['nExpediente0'], $_POST['nResolucion0'], $_POST['ubicacionArchivo0'], $_POST['largo0'], $_POST['ancho0'], $_POST['procede0'], $_POST['estado0'], $_POST['id0']);
+      $query_modif= "UPDATE TRAMITE SET ACTIVIDAD_ECONOMICA=?, F_INICIAL=?, F_VENCIMIENTO=?, DIRECCION=?, ZONIFICACION=?, TELEFONO=?, NRO_BOLETA=?, NRO_EXPEDIENTE=?, NRO_RESOLUCION=?, UBICACION_ARCHIVO_FISICO=?, LARGO=?, ANCHO=?, COMPATIBILIDAD_DE_USO=?, ESTADO=? WHERE ID=?;";
+      $pst_modif=$conn->prepare($query_modif);
+      $pst_modif->execute($par_modif);
+
+      $conn->commit();
+      $messages[] ="Modificacion exitosa.";
+    } catch (Exception $e) {
+      //die(print_r($e->getMessage()));
+
+      $mensaje=$e->getMessage();
+
+      $errors []="Lo siento algo ha salido mal intenta nuevamente. ".$mensaje;
+      $conn->rollBack();
+    
+    }finally{
+      $conn=null;
+    }
+
+  }
+
+
+if (isset($errors)){
+      
+      ?>
+      <div class="alert alert-danger" role="alert">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+          <strong>Error!</strong> 
+          <?php
+            foreach ($errors as $error) {
+                echo $error;
+              }
+            ?>
+      </div>
+      <?php
+      }
+      if (isset($messages)){
+        
+        ?>
+        <div class="alert alert-success" role="alert">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <strong>¡Bien hecho!</strong>
+            <?php
+              foreach ($messages as $message) {
+                  echo $message;
+                }
+              ?>
+        </div>
+        <?php
+      }
+
+  
+?>
